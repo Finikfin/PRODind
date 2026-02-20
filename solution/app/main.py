@@ -12,9 +12,24 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
-
 from app.api.auth.routers.register import router as auth_router
 from app.api.auth.routers.login import router as login_router
+
+from app.api.flags.routers.create_flag import router as create_flag_router
+from app.api.flags.routers.list_flags import router as list_flags_router
+from app.api.flags.routers.get_flag_by_id import router as get_flag_by_id_router
+
+from app.api.users.routers.update_user import router as update_user_router
+from app.api.users.routers.get_me import router as get_me_router
+from app.api.users.routers.update_me import router as update_me_router
+from app.api.users.routers.delete_user import router as delete_user_router
+from app.api.users.routers.list_users import router as list_users_router
+
+
+
+
+
+
 
 from app.utils.error_handlers import validation_exception_handler, http_exception_handler
 from app.database.init import init_db
@@ -66,5 +81,16 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 
 
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(login_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api")
+app.include_router(login_router, prefix="/api")
+
+app.include_router(create_flag_router, prefix="/api/flags")
+app.include_router(list_flags_router, prefix="/api/flags")
+app.include_router(get_flag_by_id_router, prefix="/api/flags")
+
+app.include_router(update_user_router, prefix="/api/user")
+app.include_router(update_me_router, prefix="/api/user")
+app.include_router(list_users_router, prefix="/api/user")
+app.include_router(get_me_router, prefix="/api/user")
+app.include_router(delete_user_router, prefix="/api/user")
+
