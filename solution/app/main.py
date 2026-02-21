@@ -24,10 +24,14 @@ from app.api.users.routers.get_me import router as get_me_router
 from app.api.users.routers.update_me import router as update_me_router
 from app.api.users.routers.delete_user import router as delete_user_router
 from app.api.users.routers.list_users import router as list_users_router
+from app.api.users.routers.update_password import router as update_password_router
 
+from app.api.decide.routers.decide_flags import router as decide_flags_router
 
-
-
+from app.api.experiments.routers.create_exp import router as create_exp_router
+from app.api.experiments.routers.delete_exp import router as delete_exp_router
+from app.api.experiments.routers.get_exp import router as get_exp_router
+from app.api.experiments.routers.status_exp import router as status_exp_router
 
 
 
@@ -93,4 +97,14 @@ app.include_router(update_me_router, prefix="/api/user")
 app.include_router(list_users_router, prefix="/api/user")
 app.include_router(get_me_router, prefix="/api/user")
 app.include_router(delete_user_router, prefix="/api/user")
+app.include_router(update_password_router, prefix="/api/user")
+
+app.include_router(decide_flags_router, prefix="/api/user")
+
+app.include_router(create_exp_router, prefix="/api/experiment")
+app.include_router(get_exp_router, prefix="/api/experiment")
+app.include_router(delete_exp_router, prefix="/api/experiment")
+app.include_router(status_exp_router, prefix="/api/experiment")
+
+
 

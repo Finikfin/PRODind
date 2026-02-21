@@ -25,3 +25,7 @@ class UserResponse(UserBase):
 class UserUpdateMe(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+
+class PasswordUpdate(BaseModel):
+    old_password: str
+    new_password: str
