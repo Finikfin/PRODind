@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.database.session import get_session
-from app.database.models import Experiment, UserRole
+from app.database.models import Experiment, ExperimentStatus, UserRole
 from app.utils.token_manager import check_permissions
 
 router = APIRouter(tags=["Experiments"])
@@ -15,8 +15,12 @@ async def delete_experiment(
 ):
     exp = await session.get(Experiment, experiment_id)
     if not exp:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail="Experiment not found")
     
-    await session.delete(exp)
+    if exp.status == ExperimentStatus.DRAFT:
+        await session.delete(exp)
+    else:
+        exp.status = ExperimentStatus.FINISHED
+    
     await session.commit()
     return None
