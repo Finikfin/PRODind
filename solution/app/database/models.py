@@ -62,3 +62,22 @@ class Experiment(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     flag: Mapped["Flag"] = relationship("Flag", back_populates="experiments")
+
+class Exposure(Base):
+    __tablename__ = "exposures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    experiment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("experiments.id"))
+    subject_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    variant_name: Mapped[str] = mapped_column(String(50))
+    decision_id: Mapped[str] = mapped_column(String(50), unique=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Conversion(Base):
+    __tablename__ = "conversions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    goal_type: Mapped[str] = mapped_column(String(50))
+    properties: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
