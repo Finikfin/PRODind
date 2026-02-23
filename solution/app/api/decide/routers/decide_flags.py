@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from uuid import uuid4
-import uuid
 
 from app.database.session import get_session
 from app.database.models import Flag, Experiment, ExperimentStatus
@@ -19,28 +19,37 @@ async def decide_flags(
 ):
     results = []
     
-    for key in request.keys:
-        stmt = select(Flag).where(Flag.key == key)
-        flag_res = await session.execute(stmt)
-        flag = flag_res.scalar_one_or_none()
+    stmt = (
+        select(Flag)
+        .options(
+            selectinload(
+                Flag.experiments.and_(Experiment.status == ExperimentStatus.RUNNING)
+            )
+        )
+        .where(Flag.key.in_(request.keys))
+    )
+    
+    flags_res = await session.execute(stmt)
+    flags = flags_res.scalars().all()
+    
+    flag_map = {f.key: f for f in flags}
 
+    for key in request.keys:
+        flag = flag_map.get(key)
+        
         if not flag:
             continue
 
-        exp_stmt = select(Experiment).where(
-            Experiment.flag_id == flag.id,
-            Experiment.status == ExperimentStatus.RUNNING
-        )
-        exp_res = await session.execute(exp_stmt)
-        experiment = exp_res.scalar_one_or_none()
+        experiment = flag.experiments[0] if flag.experiments else None
 
         decision = await DecisionEngine.decide(
             flag, experiment, request.subject_id, request.attributes
         )
 
-        decision_id = f"dec_{uuid4().hex[:12]}"
+        is_experiment_match = decision.get("experiment_id") is not None
+        decision_id = f"dec_{uuid4().hex[:12]}" if is_experiment_match else None
 
-        if decision.get("experiment_id"):
+        if is_experiment_match:
             await ExposureService.log_exposure(
                 session=session,
                 experiment_id=decision["experiment_id"],
@@ -55,7 +64,8 @@ async def decide_flags(
             "decision_id": decision_id,
             "metadata": {
                 "reason": decision["reason"],
-                "experiment_id": str(decision.get("experiment_id")) if decision.get("experiment_id") else None
+                "experiment_id": str(decision["experiment_id"]) if is_experiment_match else None,
+                "variant_name": decision.get("variant_name")
             }
         })
 

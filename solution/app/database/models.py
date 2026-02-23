@@ -47,11 +47,22 @@ class Flag(Base):
 
     experiments: Mapped[List["Experiment"]] = relationship("Experiment", back_populates="flag", cascade="all, delete-orphan")
 
+class ConflictDomain(Base):
+    __tablename__ = "conflict_domains"
+    
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
+    description: Mapped[Optional[str]] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 class Experiment(Base):
     __tablename__ = "experiments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     flag_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("flags.id", ondelete="CASCADE"))
+    conflict_domain_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("conflict_domains.id", ondelete="SET NULL"), nullable=True)
+    domain_offset: Mapped[int] = mapped_column(default=0)
+    
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[Optional[str]] = mapped_column(String(1000))
     status: Mapped[ExperimentStatus] = mapped_column(SQLEnum(ExperimentStatus), default=ExperimentStatus.DRAFT)
@@ -62,6 +73,7 @@ class Experiment(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     flag: Mapped["Flag"] = relationship("Flag", back_populates="experiments")
+    conflict_domain: Mapped[Optional["ConflictDomain"]] = relationship("ConflictDomain")
 
 class Exposure(Base):
     __tablename__ = "exposures"

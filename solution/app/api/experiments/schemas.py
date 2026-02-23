@@ -15,6 +15,8 @@ class ExperimentBase(BaseModel):
     name: str
     description: Optional[str] = None
     audience_share: float = Field(1.0, ge=0.0, le=1.0)
+    conflict_domain_id: Optional[UUID] = None
+    domain_offset: int = Field(0, ge=0, le=99)
     targeting_rules: Optional[Dict[str, Any]] = None
     variants: List[VariantSchema]
 
@@ -25,6 +27,8 @@ class ExperimentUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     audience_share: Optional[float] = Field(None, ge=0.0, le=1.0)
+    conflict_domain_id: Optional[UUID] = None
+    domain_offset: Optional[int] = Field(None, ge=0, le=99)
     targeting_rules: Optional[Dict[str, Any]] = None
     variants: Optional[List[VariantSchema]] = None
 

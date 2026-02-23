@@ -32,6 +32,7 @@ from app.api.experiments.routers.create_exp import router as create_exp_router
 from app.api.experiments.routers.delete_exp import router as delete_exp_router
 from app.api.experiments.routers.get_exp import router as get_exp_router
 from app.api.experiments.routers.status_exp import router as status_exp_router
+from app.api.experiments.routers.update_exp import router as update_exp_router
 
 from app.api.analytics.router.tracking import router as tracking_router
 from app.api.analytics.router.reports import router as reports_router
@@ -101,12 +102,13 @@ app.include_router(get_me_router, prefix="/api/user")
 app.include_router(delete_user_router, prefix="/api/user")
 app.include_router(update_password_router, prefix="/api/user")
 
-app.include_router(decide_flags_router, prefix="/api/user")
+app.include_router(decide_flags_router, prefix="/api")
 
 app.include_router(create_exp_router, prefix="/api/experiment")
 app.include_router(get_exp_router, prefix="/api/experiment")
 app.include_router(delete_exp_router, prefix="/api/experiment")
 app.include_router(status_exp_router, prefix="/api/experiment")
+app.include_router(update_exp_router, prefix="/api/experiment")
 
 app.include_router(tracking_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
