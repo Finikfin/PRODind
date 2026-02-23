@@ -34,6 +34,8 @@ from app.api.experiments.routers.get_exp import router as get_exp_router
 from app.api.experiments.routers.status_exp import router as status_exp_router
 
 from app.api.analytics.router.tracking import router as tracking_router
+from app.api.analytics.router.reports import router as reports_router
+
 
 from app.utils.error_handlers import validation_exception_handler, http_exception_handler
 from app.database.init import init_db
@@ -107,4 +109,5 @@ app.include_router(delete_exp_router, prefix="/api/experiment")
 app.include_router(status_exp_router, prefix="/api/experiment")
 
 app.include_router(tracking_router, prefix="/api")
+app.include_router(reports_router, prefix="/api")
 
