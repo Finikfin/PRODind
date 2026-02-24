@@ -17,6 +17,7 @@ async def track_event(
         subject_id=data.subject_id,
         goal_type=data.goal_type,
         properties=data.properties,
+        decision_id=data.decision_id, 
         timestamp=datetime.utcnow()
     )
     
