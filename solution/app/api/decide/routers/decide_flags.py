@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from datetime import datetime
 
 from app.database.session import get_session
 from app.database.models import Flag, Experiment, ExperimentStatus
@@ -35,21 +36,36 @@ async def decide_flags(
 
     for key in request.keys:
         flag = flag_map.get(key)
+        
         if not flag:
+            results.append({
+                "key": key,
+                "value": None, 
+                "is_default": True,
+                "decision_id": None,
+                "metadata": {"reason": "flag_not_found"}
+            })
             continue
 
-        running_exps = flag.experiments
+        running_exps = sorted(flag.experiments, key=lambda x: x.version, reverse=True)
         experiment = running_exps[0] if running_exps else None
 
         decision = await DecisionEngine.decide(
-            flag, experiment, request.subject_id, request.attributes
+            flag, 
+            experiment, 
+            request.subject_id, 
+            request.attributes
         )
 
         is_exp = decision.get("experiment_id") is not None
         d_id = None
         
         if is_exp:
-            d_id = generate_decision_id(decision["experiment_id"], request.subject_id)
+            d_id = generate_decision_id(
+                f"{decision['experiment_id']}_v{decision.get('version', 1)}", 
+                request.subject_id
+            )
+            
             await ExposureService.log_exposure(
                 session=session,
                 experiment_id=decision["experiment_id"],
@@ -61,10 +77,11 @@ async def decide_flags(
         results.append({
             "key": key,
             "value": decision["value"],
+            "is_default": not is_exp or decision["reason"] != "experiment_match",
             "decision_id": d_id,
             "metadata": {
                 "reason": decision["reason"],
-                "experiment_id": str(decision["experiment_id"]) if is_exp else None,
+                "experiment_id": decision.get("experiment_id"),
                 "variant_name": decision.get("variant_name")
             }
         })

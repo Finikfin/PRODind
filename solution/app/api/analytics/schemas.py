@@ -10,14 +10,14 @@ class TrackRequest(BaseModel):
     decision_id: str
     properties: Optional[dict] = None
 
-class ReportVariant(BaseModel):
-    variant_name: str
-    is_control: bool
-    exposures_count: int
-    conversions_count: int
+class VariantReport(BaseModel):
+    variant: str
+    total_users: int
+    conversions: int
     conversion_rate: float
 
-class ReportResponse(BaseModel):
+class ExperimentReportResponse(BaseModel):
     experiment_id: UUID
+    experiment_name: str
     goal_type: str
-    variants: List[ReportVariant]
+    results: List[VariantReport]

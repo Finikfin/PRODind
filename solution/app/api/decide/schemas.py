@@ -5,7 +5,7 @@ from uuid import UUID
 class DecisionMetadata(BaseModel):
     experiment_id: Optional[UUID] = None
     variant_name: Optional[str] = None
-    reason: str
+    reason: str 
 
 class FlagDecision(BaseModel):
     key: str

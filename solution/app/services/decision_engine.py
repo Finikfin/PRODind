@@ -13,9 +13,8 @@ class DecisionEngine:
         return int(hash_hex, 16) % 100
 
     @classmethod
-    def select_variant(cls, experiment_id: str, subject_id: UUID, variants: List[Any]) -> Optional[Dict[str, Any]]:
-        bucket = cls.get_hash_bucket(f"{experiment_id}_variant", str(subject_id))
-        
+    def select_variant(cls, seed: str, subject_id: UUID, variants: List[Any]) -> Optional[Dict[str, Any]]:
+        bucket = cls.get_hash_bucket(f"{seed}_variant", str(subject_id))
         cumulative_weight = 0
         for variant in variants:
             weight = variant.weight if hasattr(variant, 'weight') else variant.get("weight", 0)
@@ -35,7 +34,6 @@ class DecisionEngine:
         subject_id: UUID, 
         attributes: Dict[str, Any]
     ) -> Dict[str, Any]:
-        
         if hasattr(flag, 'is_active') and not flag.is_active:
             return {"value": flag.default_value, "reason": "flag_disabled"}
 
@@ -43,23 +41,21 @@ class DecisionEngine:
             return {"value": flag.default_value, "reason": "no_active_experiment"}
 
         s_id = str(subject_id)
-        exp_id = str(experiment.id)
+        exp_seed = f"{experiment.id}:v{experiment.version}"
         
         if experiment.conflict_domain_id:
             domain_bucket = cls.get_hash_bucket(str(experiment.conflict_domain_id), s_id)
             lower_bound = experiment.domain_offset
             share_pct = int(experiment.audience_share * 100)
             upper_bound = lower_bound + share_pct
-            
             if upper_bound <= 100:
                 in_domain = lower_bound <= domain_bucket < upper_bound
             else:
                 in_domain = domain_bucket >= lower_bound or domain_bucket < (upper_bound % 100)
-                
             if not in_domain:
                 return {"value": flag.default_value, "reason": "excluded_by_conflict_domain"}
         else:
-            bucket = cls.get_hash_bucket(f"{exp_id}_audience", s_id)
+            bucket = cls.get_hash_bucket(f"{exp_seed}_audience", s_id)
             if bucket >= (experiment.audience_share * 100):
                 return {"value": flag.default_value, "reason": "not_in_audience_share"}
 
@@ -68,7 +64,7 @@ class DecisionEngine:
             if not DSLEvaluator.evaluate(experiment.targeting_rules, attributes):
                 return {"value": flag.default_value, "reason": "targeting_mismatch"}
         
-        variant = cls.select_variant(exp_id, subject_id, experiment.variants)
+        variant = cls.select_variant(exp_seed, subject_id, experiment.variants)
         if not variant:
             return {"value": flag.default_value, "reason": "variant_not_found"}
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -18,7 +18,6 @@ class GuardrailSchema(BaseModel):
     action: GuardrailAction
     is_triggered: bool
     triggered_at: Optional[datetime] = None
-
     model_config = ConfigDict(from_attributes=True)
 
 class GuardrailCreate(BaseModel):
@@ -36,6 +35,18 @@ class ExperimentBase(BaseModel):
     domain_offset: int = Field(0, ge=0, le=99)
     targeting_rules: Optional[Dict[str, Any]] = None
     variants: List[VariantSchema]
+
+    @model_validator(mode='after')
+    def validate_variants_logic(self) -> 'ExperimentBase':
+        if not self.variants:
+            raise ValueError("Experiment must have at least one variant")
+        total_weight = sum(v.weight for v in self.variants)
+        if total_weight != 100:
+            raise ValueError(f"Total weight must be exactly 100, got {total_weight}")
+        names = [v.name for v in self.variants]
+        if len(names) != len(set(names)):
+            raise ValueError("Variant names must be unique")
+        return self
 
 class ExperimentCreate(ExperimentBase):
     pass
@@ -61,30 +72,11 @@ class ExperimentResponse(ExperimentBase):
     conclusion: Optional[str] = None
     version: int
     creator_id: UUID
-    
-    current_approvals: int = 0
-    required_approvals: int = 1
-    
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    current_approvals: int = 0
+    required_approvals: int = 1
     guardrails: List[GuardrailSchema] = []
-
     model_config = ConfigDict(from_attributes=True)
-
-class ExperimentReportVariant(BaseModel):
-    variant_name: str
-    is_control: bool
-    exposures: int
-    conversions: int
-    conversion_rate: float
-
-class ExperimentReport(BaseModel):
-    experiment_id: UUID
-    goal_type: str
-    total_exposures: int
-    total_conversions: int
-    variants: List[ExperimentReportVariant]
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
