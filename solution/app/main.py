@@ -12,6 +12,8 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
+from app.api.health import router as health_router
+
 from app.api.auth.routers.register import router as auth_router
 from app.api.auth.routers.login import router as login_router
 
@@ -89,6 +91,7 @@ async def add_trace_id(request, call_next):
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 
+app.include_router(health_router, prefix="/api")
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(login_router, prefix="/api")
