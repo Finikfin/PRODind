@@ -28,6 +28,8 @@ class ExperimentStatus(str, enum.Enum):
     RUNNING = "RUNNING"
     PAUSED = "PAUSED"
     FINISHED = "FINISHED"
+    REJECTED = "REJECTED"
+    ARCHIVED = "ARCHIVED"
 
 class User(Base):
     __tablename__ = "users"
@@ -121,3 +123,8 @@ class Conversion(Base):
     properties: Mapped[dict] = mapped_column(JSONB, nullable=True)
     decision_id: Mapped[str] = mapped_column(String(50), ForeignKey("exposures.decision_id"))
     timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class ExperimentOutcome(str, enum.Enum):
+    ROLLOUT = "ROLLOUT"
+    ROLLBACK = "ROLLBACK"
+    NO_EFFECT = "NO_EFFECT"

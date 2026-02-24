@@ -25,6 +25,8 @@ from app.api.users.routers.update_me import router as update_me_router
 from app.api.users.routers.delete_user import router as delete_user_router
 from app.api.users.routers.list_users import router as list_users_router
 from app.api.users.routers.update_password import router as update_password_router
+from app.api.users.routers.threshold import router as threshold_router
+from app.api.users.routers.approvers import router as approvers_router
 
 from app.api.decide.routers.decide_flags import router as decide_flags_router
 
@@ -101,6 +103,8 @@ app.include_router(list_users_router, prefix="/api/user")
 app.include_router(get_me_router, prefix="/api/user")
 app.include_router(delete_user_router, prefix="/api/user")
 app.include_router(update_password_router, prefix="/api/user")
+app.include_router(threshold_router, prefix="/api/user")
+app.include_router(approvers_router, prefix="/api/user")
 
 app.include_router(decide_flags_router, prefix="/api")
 
