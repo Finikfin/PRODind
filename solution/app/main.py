@@ -41,6 +41,11 @@ from app.api.experiments.routers.update_exp import router as update_exp_router
 from app.api.analytics.router.tracking import router as tracking_router
 from app.api.analytics.router.reports import router as reports_router
 
+from app.api.guardrails.routers.create import router as create_guardrale_router
+from app.api.guardrails.routers.delete import router as delete_guardrale_router
+from app.api.guardrails.routers.get import router as get_guardrale_router
+from app.api.guardrails.routers.list import router as list_guardrale_router
+from app.api.guardrails.routers.update import router as update_guardrale_router
 
 from app.utils.error_handlers import validation_exception_handler, http_exception_handler
 from app.database.init import init_db
@@ -120,3 +125,8 @@ app.include_router(update_exp_router, prefix="/api/experiment")
 app.include_router(tracking_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 
+app.include_router(create_guardrale_router, prefix="/api")
+app.include_router(delete_guardrale_router, prefix="/api")
+app.include_router(get_guardrale_router, prefix="/api")
+app.include_router(list_guardrale_router, prefix="/api")
+app.include_router(update_guardrale_router, prefix="/api")

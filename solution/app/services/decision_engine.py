@@ -48,10 +48,13 @@ class DecisionEngine:
             lower_bound = experiment.domain_offset
             share_pct = int(experiment.audience_share * 100)
             upper_bound = lower_bound + share_pct
+            
+            in_domain = False
             if upper_bound <= 100:
                 in_domain = lower_bound <= domain_bucket < upper_bound
             else:
                 in_domain = domain_bucket >= lower_bound or domain_bucket < (upper_bound % 100)
+                
             if not in_domain:
                 return {"value": flag.default_value, "reason": "excluded_by_conflict_domain"}
         else:
@@ -72,5 +75,6 @@ class DecisionEngine:
             "value": variant["value"],
             "variant_name": variant["name"],
             "experiment_id": experiment.id,
+            "version": experiment.version,
             "reason": "experiment_match"
         }
