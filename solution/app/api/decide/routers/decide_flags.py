@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -23,9 +23,7 @@ async def decide_flags(
         select(Flag)
         .options(
             selectinload(
-                Flag.experiments.and_(
-                    Experiment.status.in_([ExperimentStatus.RUNNING, ExperimentStatus.PAUSED])
-                )
+                Flag.experiments.and_(Experiment.status == ExperimentStatus.RUNNING)
             )
         )
         .where(Flag.key.in_(request.keys))
@@ -40,10 +38,8 @@ async def decide_flags(
         if not flag:
             continue
 
-        running_exps = [e for e in flag.experiments if e.status == ExperimentStatus.RUNNING]
-        experiment = None
-        if running_exps:
-            experiment = sorted(running_exps, key=lambda x: x.created_at, reverse=True)[0]
+        running_exps = flag.experiments
+        experiment = running_exps[0] if running_exps else None
 
         decision = await DecisionEngine.decide(
             flag, experiment, request.subject_id, request.attributes

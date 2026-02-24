@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime
 
 from app.database.session import get_session
@@ -21,24 +22,20 @@ async def track_event(
     exposure = exposure_res.scalar_one_or_none()
 
     if not exposure:
-        return {"status": "error", "message": "Invalid decision_id"}
+        raise HTTPException(400, "Invalid decision_id")
 
-    conversion = Conversion(
+    stmt = insert(Conversion).values(
+        event_id=data.event_id,
         subject_id=data.subject_id,
         goal_type=data.goal_type,
-        properties=data.properties,
         decision_id=data.decision_id,
         timestamp=datetime.utcnow()
-    )
-    session.add(conversion)
+    ).on_conflict_do_nothing(index_elements=['event_id'])
     
+    await session.execute(stmt)
     await session.flush()
 
     await GuardrailService.check_and_trigger(session, exposure.experiment_id)
-
     await session.commit()
     
-    return {
-        "status": "success", 
-        "experiment_id": exposure.experiment_id
-    }
+    return {"status": "success"}

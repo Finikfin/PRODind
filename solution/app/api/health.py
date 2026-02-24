@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -12,11 +13,11 @@ async def health_check(session: AsyncSession = Depends(get_session)):
         return {
             "status": "healthy",
             "database": "connected",
-            "timestamp": "2026-02-24T20:40:18Z"
+            "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "database": str(e),
-            "timestamp": "2026-02-24T20:40:18Z"
+            "timestamp": datetime.utcnow().isoformat()
         }

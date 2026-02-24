@@ -2,6 +2,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+from datetime import datetime
 from app.database.models import Experiment, ExperimentApproval, ExperimentStatus, User, UserRole
 
 class ReviewService:
@@ -38,3 +39,32 @@ class ReviewService:
             exp.status = ExperimentStatus.APPROVED
         
         await session.commit()
+
+    @staticmethod
+    async def change_status(session, experiment_id, new_status: ExperimentStatus):
+        exp = await session.get(Experiment, experiment_id)
+        if not exp:
+            raise HTTPException(404, "Experiment not found")
+
+        if new_status == ExperimentStatus.RUNNING:
+            if exp.status not in [ExperimentStatus.APPROVED, ExperimentStatus.PAUSED]:
+                raise HTTPException(400, "Experiment must be APPROVED or PAUSED to start")
+            
+            check_running = await session.scalar(
+                select(func.count(Experiment.id))
+                .where(Experiment.flag_id == exp.flag_id)
+                .where(Experiment.status == ExperimentStatus.RUNNING)
+                .where(Experiment.id != experiment_id)
+            )
+            if check_running > 0:
+                raise HTTPException(400, "Another experiment is already RUNNING for this flag")
+            
+            if not exp.started_at:
+                exp.started_at = datetime.utcnow()
+        
+        if new_status in [ExperimentStatus.FINISHED, ExperimentStatus.ARCHIVED]:
+            exp.finished_at = datetime.utcnow()
+
+        exp.status = new_status
+        await session.commit()
+        return exp
