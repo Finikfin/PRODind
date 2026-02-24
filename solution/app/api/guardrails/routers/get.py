@@ -20,7 +20,7 @@ async def get_guardrail_endpoint(
     if not gr:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Guardrail not found"
+            detail={"message": "Guardrail не найден"}
         )
         
     return gr

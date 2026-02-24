@@ -15,7 +15,10 @@ async def delete_guardrail_endpoint(
 ):
     gr = await session.get(Guardrail, guardrail_id)
     if not gr:
-        raise HTTPException(status_code=404, detail="Guardrail not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Guardrail не найден"}
+        )
     
     await session.delete(gr)
     await session.commit()
