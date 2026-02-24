@@ -15,7 +15,10 @@ async def delete_experiment(
 ):
     exp = await session.get(Experiment, experiment_id)
     if not exp:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail={"message": "Эксперимент не найден"}
+        )
     
     if exp.status == ExperimentStatus.DRAFT:
         await session.delete(exp)

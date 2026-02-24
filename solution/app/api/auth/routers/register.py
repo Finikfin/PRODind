@@ -16,7 +16,7 @@ async def register(data: RegisterIn, session: AsyncSession = Depends(get_session
     if res.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"field": "email", "message": "User already exists"},
+            detail={"message": "Пользователь с таким email уже существует"}
         )
 
     user = User(

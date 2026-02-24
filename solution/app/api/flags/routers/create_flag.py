@@ -20,7 +20,7 @@ async def create_flag(
     if result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
-            detail=f"Flag with key '{data.key}' already exists"
+            detail={"message": f"Флаг с ключом '{data.key}' уже существует"}
         )
 
     new_flag = Flag(**data.model_dump())

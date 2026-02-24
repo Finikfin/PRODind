@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.database.session import get_session
@@ -18,12 +18,18 @@ async def update_experiment(
 ):
     exp = await session.get(Experiment, experiment_id)
     if not exp:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail={"message": "Эксперимент не найден"}
+        )
 
     if exp.status == ExperimentStatus.RUNNING:
         raise HTTPException(
-            status_code=400, 
-            detail="Cannot edit parameters of a RUNNING experiment. Pause or finish it first."
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail={
+                "message": "Нельзя редактировать запущенный эксперимент",
+                "hint": "Сначала переведите его в статус PAUSED или FINISHED"
+            }
         )
 
     update_data = experiment_data.model_dump(exclude_unset=True)

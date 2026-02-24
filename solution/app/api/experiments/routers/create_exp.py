@@ -16,7 +16,10 @@ async def create_experiment(
 ):
     flag = await session.get(Flag, data.flag_id)
     if not flag:
-        raise HTTPException(status_code=404, detail="Flag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Флаг не найден"}
+        )
 
     variants_raw = [v.model_dump() for v in data.variants]
     

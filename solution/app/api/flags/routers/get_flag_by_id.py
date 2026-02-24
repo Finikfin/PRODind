@@ -16,5 +16,8 @@ async def get_flag_by_id(
 ):
     flag = await session.get(Flag, flag_id)
     if not flag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"message": "Флаг не найден"}
+        )
     return flag

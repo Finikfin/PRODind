@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import joinedload
@@ -26,14 +26,19 @@ async def change_experiment_status(
     exp = result.scalar_one_or_none()
 
     if not exp:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail={"message": "Эксперимент не найден"}
+        )
 
     new_status = update_data.status
 
     if new_status == ExperimentStatus.APPROVED:
-
         if current_user.role not in [UserRole.ADMIN, UserRole.APPROVER]:
-            raise HTTPException(status_code=403, detail="Only Admins/Approvers can approve")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail={"message": "Только администраторы и аппруверы могут подтверждать эксперименты"}
+            )
         
         vote_stmt = select(ExperimentApproval).where(
             and_(ExperimentApproval.experiment_id == experiment_id, ExperimentApproval.approver_id == current_user.id)
@@ -48,7 +53,10 @@ async def change_experiment_status(
 
     elif new_status == ExperimentStatus.FINISHED:
         if not update_data.conclusion:
-            raise HTTPException(status_code=400, detail="Conclusion required for FINISHED status")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail={"message": "Необходимо заполнить заключение (conclusion) для завершения эксперимента"}
+            )
         exp.status = ExperimentStatus.FINISHED
         exp.outcome = update_data.outcome
         exp.conclusion = update_data.conclusion

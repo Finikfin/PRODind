@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
@@ -26,5 +26,8 @@ async def get_experiment(
 ):
     exp = await session.get(Experiment, experiment_id)
     if not exp:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail={"message": "Эксперимент не найден"}
+        )
     return exp

@@ -18,13 +18,13 @@ async def login(data: LoginIn, session: AsyncSession = Depends(get_session)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail={"message": "Неверный email или пароль"}
         )
     
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
-            detail="User is inactive"
+            detail={"message": "Пользователь неактивен"}
         )
     
     token, expires_in = create_access_token(sub=str(user.id), role=user.role)
