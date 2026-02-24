@@ -59,6 +59,11 @@ class User(Base):
         backref="assigned_experimenters"
     )
 
+class ConflictDomain(Base):
+    __tablename__ = "conflict_domains"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
+
 class Flag(Base):
     __tablename__ = "flags"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -68,6 +73,17 @@ class Flag(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     experiments: Mapped[List["Experiment"]] = relationship("Experiment", back_populates="flag", cascade="all, delete-orphan")
+
+class ExperimentApproval(Base):
+    __tablename__ = "experiment_approvals"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    experiment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("experiments.id", ondelete="CASCADE"))
+    approver_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    experiment: Mapped["Experiment"] = relationship("Experiment", back_populates="approvals")
+
+    __table_args__ = (UniqueConstraint("experiment_id", "approver_id", name="uq_experiment_approver"),)
 
 class Experiment(Base):
     __tablename__ = "experiments"
@@ -90,7 +106,7 @@ class Experiment(Base):
 
     flag: Mapped["Flag"] = relationship("Flag", back_populates="experiments")
     creator: Mapped["User"] = relationship("User", back_populates="created_experiments")
-    approvals: Mapped[List["ExperimentApproval"]] = relationship("ExperimentApproval", cascade="all, delete-orphan")
+    approvals: Mapped[List["ExperimentApproval"]] = relationship("ExperimentApproval", back_populates="experiment", cascade="all, delete-orphan")
     guardrails: Mapped[List["Guardrail"]] = relationship("Guardrail", back_populates="experiment", cascade="all, delete-orphan")
 
     __table_args__ = (
